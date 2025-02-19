@@ -2,28 +2,35 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
 export const useBoardStore = defineStore('board', () => {
+  const defaultColumns = [
+    {
+      id: 'todo',
+      title: 'To Do',
+      tasks: []
+    },
+    {
+      id: 'inProgress',
+      title: 'In Progress',
+      tasks: []
+    },
+    {
+      id: 'done',
+      title: 'Done',
+      tasks: []
+    }
+  ]
+
   const boards = ref([
     {
       id: 'main',
       title: 'Main Board',
-      columns: [
-        {
-          id: 'todo',
-          title: 'To Do',
-          tasks: []
-        },
-        {
-          id: 'inProgress',
-          title: 'In Progress',
-          tasks: []
-        },
-        {
-          id: 'done',
-          title: 'Done',
-          tasks: []
-        }
-      ],
+      background: '#F8FAFC',
+      visibility: 'private',
       favorite: false,
+      teamId: '',
+      createdAt: '2024-01-01T00:00:00.000Z',
+      updatedAt: '2024-01-01T00:00:00.000Z',
+      columns: [...defaultColumns],
       members: []
     }
   ])
@@ -31,7 +38,17 @@ export const useBoardStore = defineStore('board', () => {
   const currentBoard = ref('main')
 
   const currentBoardData = computed(() => 
-    boards.value.find(b => b.id === currentBoard.value)
+    boards.value.find(b => b.id === currentBoard.value) || {
+      id: 'main',
+      title: 'Main Board',
+      background: '#F8FAFC',
+      columns: [...defaultColumns],
+      members: [],
+      favorite: false,
+      team: '',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
   )
 
   function addTask(task) {
@@ -112,7 +129,31 @@ export const useBoardStore = defineStore('board', () => {
   }
 
   function addBoard(board) {
-    boards.value.push(board)
+    boards.value.push({
+      ...board,
+      lists: [],
+      members: []
+    })
+  }
+
+  function updateBoard(updatedBoard) {
+    const index = boards.value.findIndex(b => b.id === updatedBoard.id)
+    if (index !== -1) {
+      const background = updatedBoard.background?.includes('gradient')
+        ? updatedBoard.background
+        : updatedBoard.background || '#EFF6FF'
+
+      boards.value[index] = {
+        ...boards.value[index],
+        ...updatedBoard,
+        background,
+        updatedAt: new Date().toISOString()
+      }
+    }
+  }
+
+  function deleteBoard(boardId) {
+    boards.value = boards.value.filter(b => b.id !== boardId)
   }
 
   function deleteTask(taskId) {
@@ -138,6 +179,16 @@ export const useBoardStore = defineStore('board', () => {
     board.columns = board.columns.filter(c => c.id !== columnId)
   }
 
+  function updateBoardSettings(settings) {
+    const board = boards.value.find(b => b.id === currentBoard.value)
+    if (board) {
+      board.title = settings.title
+      board.visibility = settings.visibility
+      board.background = settings.background
+      board.labels = settings.labels
+    }
+  }
+
   return {
     boards,
     currentBoard,
@@ -150,8 +201,11 @@ export const useBoardStore = defineStore('board', () => {
     updateComment,
     deleteComment,
     addBoard,
+    updateBoard,
+    deleteBoard,
     deleteTask,
     updateColumn,
-    deleteColumn
+    deleteColumn,
+    updateBoardSettings
   }
 }) 
