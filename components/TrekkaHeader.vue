@@ -66,7 +66,7 @@
         </button>
         <img
           class="h-8 w-8 rounded-full"
-          src="https://ui-avatars.com/api/?name=User"
+          src="https://ui-avatars.com/api/?name=ZW"
           alt="User avatar"
         >
       </div>

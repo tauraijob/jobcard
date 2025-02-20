@@ -58,5 +58,24 @@ export default defineNuxtConfig({
     transpile: ['pinia']
   },
 
-  compatibilityDate: '2025-02-19'
+  compatibilityDate: '2025-02-19',
+
+  router: {
+    extendRoutes(routes, resolve) {
+      routes.push(
+        {
+          path: '/privacy/',
+          component: resolve(__dirname, 'pages/privacy/index.vue')
+        },
+        {
+          path: '/terms/',
+          component: resolve(__dirname, 'pages/terms/index.vue')
+        },
+        {
+          path: '/help/',
+          component: resolve(__dirname, 'pages/help/index.vue')
+        }
+      )
+    }
+  }
 })

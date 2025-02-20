@@ -1,7 +1,5 @@
 <template>
-  <div class="min-h-screen flex flex-col bg-blue-50">
-    <TrekkaHeader />
-    
+  <div class="min-h-screen flex flex-col">
     <main class="flex-1 container mx-auto px-6 py-8">
       <!-- Teams Header -->
       <div class="mb-8">
@@ -124,8 +122,6 @@
       :team="selectedTeam"
       @save="saveTeam"
     />
-
-    <TrekkaFooter />
   </div>
 </template>
 

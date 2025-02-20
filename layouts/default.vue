@@ -1,12 +1,18 @@
 <template>
-  <div>
-    <slot />
+  <div class="flex flex-col min-h-screen">
+    <TrekkaHeader />
+    <main class="flex-1">
+      <slot />
+    </main>
+    <TrekkaFooter />
   </div>
 </template>
 
 <script setup>
 import { onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
+import TrekkaHeader from '~/components/TrekkaHeader.vue'
+import TrekkaFooter from '~/components/TrekkaFooter.vue'
 
 const router = useRouter()
 

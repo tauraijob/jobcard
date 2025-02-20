@@ -11,7 +11,8 @@
   "dependencies": {
     "@pinia/nuxt": "^0.4.11",
     "@vueuse/core": "^12.7.0",
-    "pinia": "^2.1.7"
+    "pinia": "^2.1.7",
+    "vuedraggable": "^4.1.0"
   },
   "devDependencies": {
     "@nuxtjs/tailwindcss": "^6.11.4",

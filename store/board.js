@@ -1,25 +1,25 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
-export const useBoardStore = defineStore('board', () => {
-  const defaultColumns = [
-    {
-      id: 'todo',
-      title: 'To Do',
-      tasks: []
-    },
-    {
-      id: 'inProgress',
-      title: 'In Progress',
-      tasks: []
-    },
-    {
-      id: 'done',
-      title: 'Done',
-      tasks: []
-    }
-  ]
+const createDefaultColumns = () => [
+  {
+    id: 'todo',
+    title: 'To Do',
+    tasks: []
+  },
+  {
+    id: 'inProgress',
+    title: 'In Progress',
+    tasks: []
+  },
+  {
+    id: 'done',
+    title: 'Done',
+    tasks: []
+  }
+]
 
+export const useBoardStore = defineStore('board', () => {
   const boards = ref([
     {
       id: 'main',
@@ -30,7 +30,7 @@ export const useBoardStore = defineStore('board', () => {
       teamId: '',
       createdAt: '2024-01-01T00:00:00.000Z',
       updatedAt: '2024-01-01T00:00:00.000Z',
-      columns: [...defaultColumns],
+      columns: createDefaultColumns(),
       members: []
     }
   ])
@@ -42,7 +42,7 @@ export const useBoardStore = defineStore('board', () => {
       id: 'main',
       title: 'Main Board',
       background: '#F8FAFC',
-      columns: [...defaultColumns],
+      columns: createDefaultColumns(),
       members: [],
       favorite: false,
       team: '',
@@ -51,37 +51,102 @@ export const useBoardStore = defineStore('board', () => {
     }
   )
 
-  function addTask(task) {
+  function addTask(task, columnId) {
     const board = boards.value.find(b => b.id === currentBoard.value)
-    const column = board.columns.find(c => c.id === 'todo')
+    if (!board) return
+
+    // Use the provided columnId or task's stage
+    const targetColumnId = columnId || task.stage || 'todo'
+    const column = board.columns.find(c => c.id === targetColumnId)
+    if (!column) return
+
     column.tasks.push({
       ...task,
-      createdAt: new Date().toISOString()
+      stage: targetColumnId // Ensure the stage matches the column
     })
   }
 
-  function updateTask(taskId, updatedTask) {
+  function updateTask(taskId, updates) {
     const board = boards.value.find(b => b.id === currentBoard.value)
-    board.columns.forEach(column => {
+    if (!board) return
+
+    // If stage has changed, move the task
+    let currentStage
+    for (const column of board.columns) {
+      const task = column.tasks.find(t => t.id === taskId)
+      if (task) {
+        currentStage = column.id
+        break
+      }
+    }
+
+    if (currentStage && updates.stage && currentStage !== updates.stage) {
+      moveTaskToStage(taskId, updates.stage)
+    } else {
+      // Update task in place if stage hasn't changed
+      for (const column of board.columns) {
+        const taskIndex = column.tasks.findIndex(t => t.id === taskId)
+        if (taskIndex !== -1) {
+          column.tasks[taskIndex] = { ...column.tasks[taskIndex], ...updates }
+          break
+        }
+      }
+    }
+  }
+
+  function moveTask(fromColumnId, toColumnId, taskId) {
+    const board = boards.value.find(b => b.id === currentBoard.value)
+    if (!board) return
+
+    const fromColumn = board.columns.find(c => c.id === fromColumnId)
+    const toColumn = board.columns.find(c => c.id === toColumnId)
+    
+    if (!fromColumn || !toColumn) return
+    
+    const taskIndex = fromColumn.tasks.findIndex(t => t.id === taskId)
+    if (taskIndex === -1) return
+
+    const task = fromColumn.tasks[taskIndex]
+    
+    // Remove from original column
+    fromColumn.tasks.splice(taskIndex, 1)
+    
+    // Add to new column with updated stage
+    toColumn.tasks.push({
+      ...task,
+      stage: toColumnId // Update the stage to match new column
+    })
+  }
+
+  function moveTaskToStage(taskId, newStage) {
+    const board = boards.value.find(b => b.id === currentBoard.value)
+    if (!board) return
+
+    // Find the task in any column
+    let task
+    let fromColumn
+    
+    for (const column of board.columns) {
       const taskIndex = column.tasks.findIndex(t => t.id === taskId)
       if (taskIndex !== -1) {
-        column.tasks[taskIndex] = { ...updatedTask }
+        task = column.tasks[taskIndex]
+        fromColumn = column
+        // Remove task from current column
+        column.tasks.splice(taskIndex, 1)
+        break
       }
-    })
-  }
+    }
 
-  function moveTask(fromColumn, toColumn, fromIndex, toIndex) {
-    const board = boards.value.find(b => b.id === currentBoard.value)
-    const sourceColumn = board.columns.find(c => c.id === fromColumn)
-    const targetColumn = board.columns.find(c => c.id === toColumn)
-    
-    if (!sourceColumn || !targetColumn) return
-    
-    // Remove from source column
-    const [task] = sourceColumn.tasks.splice(fromIndex, 1)
-    
-    // Add to target column
-    targetColumn.tasks.splice(toIndex, 0, task)
+    if (!task) return
+
+    // Add task to new stage column with updated stage property
+    const toColumn = board.columns.find(c => c.id === newStage)
+    if (toColumn) {
+      toColumn.tasks.push({
+        ...task,
+        stage: newStage // Ensure stage is updated
+      })
+    }
   }
 
   function addColumn(title) {
@@ -206,6 +271,7 @@ export const useBoardStore = defineStore('board', () => {
     deleteTask,
     updateColumn,
     deleteColumn,
-    updateBoardSettings
+    updateBoardSettings,
+    moveTaskToStage
   }
 }) 
