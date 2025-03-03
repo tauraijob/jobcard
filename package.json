@@ -10,8 +10,10 @@
   },
   "dependencies": {
     "@pinia/nuxt": "^0.4.11",
+    "@prisma/client": "^6.4.0",
     "@vueuse/core": "^12.7.0",
     "pinia": "^2.1.7",
+    "prisma": "^6.4.0",
     "vuedraggable": "^4.1.0"
   },
   "devDependencies": {

@@ -3,7 +3,8 @@ import { Server } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { parentPort, threadId } from 'node:worker_threads';
-import { getRequestHeader, splitCookiesString, setResponseStatus, setResponseHeader, send, getRequestHeaders, defineEventHandler, handleCacheHeaders, createEvent, fetchWithEvent, isEvent, eventHandler, setHeaders, sendRedirect, proxyRequest, createApp, createRouter as createRouter$1, toNodeListener, lazyEventHandler, getResponseStatus, setResponseHeaders, createError, getRouterParam, readBody, getQuery as getQuery$1, getResponseStatusText } from 'file://C:/Users/Taurai%20Munodawafa/OneDrive/Desktop/jobcard/node_modules/h3/dist/index.mjs';
+import { getRequestHeader, splitCookiesString, setResponseStatus, setResponseHeader, send, getRequestHeaders, defineEventHandler, handleCacheHeaders, createEvent, fetchWithEvent, isEvent, eventHandler, setHeaders, sendRedirect, proxyRequest, createApp, createRouter as createRouter$1, toNodeListener, lazyEventHandler, getResponseStatus, setResponseHeaders, createError, getRouterParam, readBody, getQuery as getQuery$1, getMethod, getResponseStatusText } from 'file://C:/Users/Taurai%20Munodawafa/OneDrive/Desktop/jobcard/node_modules/h3/dist/index.mjs';
+import { PrismaClient } from 'file://C:/Users/Taurai%20Munodawafa/OneDrive/Desktop/jobcard/node_modules/@prisma/client/default.js';
 import { getRequestDependencies, getPreloadLinks, getPrefetchLinks, createRenderer } from 'file://C:/Users/Taurai%20Munodawafa/OneDrive/Desktop/jobcard/node_modules/vue-bundle-renderer/dist/runtime.mjs';
 import { stringify, uneval } from 'file://C:/Users/Taurai%20Munodawafa/OneDrive/Desktop/jobcard/node_modules/devalue/index.js';
 import destr from 'file://C:/Users/Taurai%20Munodawafa/OneDrive/Desktop/jobcard/node_modules/destr/dist/index.mjs';
@@ -271,9 +272,13 @@ const plugins = [
 _OJ47RzPJ8V
 ];
 
+const _lazy_NTqA0I = () => Promise.resolve().then(function () { return _id_$1; });
+const _lazy_dzGUkw = () => Promise.resolve().then(function () { return index$1; });
 const _lazy_VcVDLr = () => Promise.resolve().then(function () { return renderer$1; });
 
 const handlers = [
+  { route: '/api/teams/:id', handler: _lazy_NTqA0I, lazy: true, middleware: false, method: undefined },
+  { route: '/api/teams', handler: _lazy_dzGUkw, lazy: true, middleware: false, method: undefined },
   { route: '/__nuxt_error', handler: _lazy_VcVDLr, lazy: true, middleware: false, method: undefined },
   { route: '/**', handler: _lazy_VcVDLr, lazy: true, middleware: false, method: undefined }
 ];
@@ -1082,6 +1087,94 @@ const template$1 = (messages) => {
 const errorDev = /*#__PURE__*/Object.freeze({
   __proto__: null,
   template: template$1
+});
+
+const prisma = new PrismaClient();
+
+const _id_ = defineEventHandler(async (event) => {
+  const id = getRouterParam(event, "id");
+  const method = getMethod(event);
+  switch (method) {
+    case "GET":
+      return await prisma.team.findUnique({
+        where: { id },
+        include: {
+          owner: true,
+          members: {
+            include: {
+              user: true
+            }
+          },
+          boards: true
+        }
+      });
+    case "PUT":
+      const body = await readBody(event);
+      return await prisma.team.update({
+        where: { id },
+        data: {
+          name: body.name,
+          description: body.description,
+          avatar: body.avatar
+        }
+      });
+    case "DELETE":
+      return await prisma.team.delete({
+        where: { id }
+      });
+    default:
+      throw createError({
+        statusCode: 405,
+        statusMessage: "Method Not Allowed"
+      });
+  }
+});
+
+const _id_$1 = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  default: _id_
+});
+
+const index = defineEventHandler(async (event) => {
+  const method = getMethod(event);
+  switch (method) {
+    case "GET":
+      return await prisma.team.findMany({
+        include: {
+          owner: true,
+          members: {
+            include: {
+              user: true
+            }
+          }
+        }
+      });
+    case "POST":
+      const body = await readBody(event);
+      return await prisma.team.create({
+        data: {
+          name: body.name,
+          description: body.description,
+          ownerId: body.ownerId,
+          // This should come from authenticated user
+          avatar: body.avatar
+        },
+        include: {
+          owner: true,
+          members: true
+        }
+      });
+    default:
+      throw createError({
+        statusCode: 405,
+        statusMessage: "Method Not Allowed"
+      });
+  }
+});
+
+const index$1 = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  default: index
 });
 
 const Vue3 = version[0] === "3";
